@@ -139,7 +139,11 @@ export default function decorate(block) {
     }
 
     li.classList.add(`cards-card--alignment-${alignment}`);
-    if (selectable.toLowerCase() === 'true') li.classList.add('cards-card--selectable');
+    if (selectable.toLowerCase() === 'true') {
+      li.classList.add('cards-card--selectable');
+      // Clicking a selectable card toggles its selected state (border style is in cards.css).
+      li.addEventListener('click', () => li.classList.toggle('cards-card--selected'));
+    }
     if (link && !isHexColor(link)) {
       li.dataset.sectionLink = link;
       li.addEventListener('click', () => {
