@@ -13,7 +13,7 @@ On the site, `decorateDMImageLinks()` in `scripts/scripts.js` turns Dynamic Medi
 
 DA site config (`https://da.live/config#/yoge93/we-health/`):
 
-- **library** sheet: `title` = `AEM Assets`, `path` = `/tools/plugins/asset-delivery/asset-delivery.html`, `experience` = `fullsize-dialog`
+- **library** sheet: `title` = `Asset Delivery` (not `AEM Assets`: DA reserves that name for its built-in picker), `path` = `/tools/plugins/asset-delivery/asset-delivery.html`, `experience` = `fullsize-dialog`
 - **data** sheet (all optional):
   - `asset-delivery.repositoryId` – default `author-p35437-e2207568.adobeaemcloud.com`
   - `asset-delivery.dm.origin` – default: repository id with `author-` → `delivery-`
