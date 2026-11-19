@@ -456,7 +456,10 @@ body.wehealthcare-theme .whbreadcrumb .button-container .button:hover{
 body.wehealthcare-theme header {
   position: static;
   min-height: 72px;
-  height: 100%;
+
+  /* auto, not 100%: DA's preview.da.live (Layout view) renders in quirks mode,
+     where 100% resolves to the viewport and the header covers the page */
+  height: auto;
 }
 body.wehealthcare-theme header nav {
   gap: 1rem;
