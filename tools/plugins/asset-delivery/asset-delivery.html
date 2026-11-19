@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AEM Assets – Asset delivery</title>
+  <link rel="stylesheet" href="./asset-delivery.css">
+  <script src="./asset-delivery.js" type="module"></script>
+</head>
+<body>
+  <main class="asset-delivery">
+    <header class="asset-delivery-toolbar">
+      <label class="asset-delivery-field" for="asset-delivery-mode">
+        <span class="asset-delivery-label">Asset delivery</span>
+        <select id="asset-delivery-mode" name="asset-delivery-mode">
+          <option value="dm">Dynamic Media (approved assets)</option>
+          <option value="standard">Standard asset (DA default)</option>
+        </select>
+      </label>
+      <p class="asset-delivery-hint" id="asset-delivery-hint" aria-live="polite"></p>
+    </header>
+    <section class="asset-delivery-message" id="asset-delivery-message" role="alert" hidden></section>
+    <section class="asset-delivery-selector" id="asset-delivery-selector" aria-label="AEM Assets selector">
+      <p class="asset-delivery-loading">Loading AEM Assets…</p>
+    </section>
+  </main>
+</body>
+</html>

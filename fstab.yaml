@@ -1,5 +1,4 @@
 mountpoints:
   /:
-    url: "https://author-p189874-e1977911.adobeaemcloud.com/bin/franklin.delivery/harshal759/binji/main"
-    type: "markup"
-    suffix: ".html"
+    url: https://content.da.live/yoge93/we-health/
+    type: markup

@@ -319,12 +319,86 @@ export function decorateTitleAlignment(container) {
   });
 }
 
+const DM_IMAGE_PATH = /\/adobe\/assets\/urn:aaid:aem:[^/]+\/as\/([^/?#]+)\.(avif|webp|jpe?g|png|gif)$/i;
+
+/**
+ * Builds a responsive <picture> for a Dynamic Media with OpenAPI image URL.
+ * @param {string} href DM URL, e.g. https://delivery-p1-e2.adobeaemcloud.com/adobe/assets/urn:aaid:aem:.../as/name.avif
+ * @param {string} alt alternative text
+ * @param {boolean} eager load eagerly (LCP candidate)
+ * @returns {HTMLPictureElement|null}
+ */
+export function createDMPicture(href, alt = '', eager = false) {
+  let url;
+  try {
+    url = new URL(href, window.location.href);
+  } catch {
+    return null;
+  }
+  const match = url.pathname.match(DM_IMAGE_PATH);
+  if (!match) return null;
+  const ext = match[2].toLowerCase();
+  const fallbackExt = ext === 'png' || ext === 'gif' ? ext : 'jpg';
+  const withFormat = (format, width) => {
+    const u = new URL(url);
+    u.pathname = url.pathname.replace(/\.[a-z]+$/i, `.${format}`);
+    u.searchParams.set('width', width);
+    u.searchParams.set('quality', '85');
+    return u.toString();
+  };
+  const breakpoints = [{ media: '(min-width: 600px)', width: 2000 }, { width: 750 }];
+  const pic = document.createElement('picture');
+  breakpoints.forEach(({ media, width }) => {
+    const webp = document.createElement('source');
+    webp.type = 'image/webp';
+    webp.srcset = withFormat('webp', width);
+    if (media) webp.media = media;
+    pic.append(webp);
+  });
+  breakpoints.forEach(({ media, width }) => {
+    if (!media) return;
+    const src = document.createElement('source');
+    src.srcset = withFormat(fallbackExt, width);
+    src.media = media;
+    pic.append(src);
+  });
+  const image = document.createElement('img');
+  image.setAttribute('src', withFormat(fallbackExt, 750));
+  image.setAttribute('alt', alt);
+  image.setAttribute('loading', eager ? 'eager' : 'lazy');
+  pic.append(image);
+  return pic;
+}
+
+/**
+ * Turns Dynamic Media image links inserted by the DA "Asset delivery" plugin
+ * (link text = URL, optional title = alt text) into responsive pictures.
+ * Links inside the dynamic-media-image / dm-openapi blocks are left to decorateDMImages.
+ * @param {Element} main The main element
+ */
+export function decorateDMImageLinks(main) {
+  let first = true;
+  const firstSection = main.querySelector('div');
+  main.querySelectorAll('a[href*="/adobe/assets/urn:aaid:aem:"]').forEach((a) => {
+    if (a.closest('.dm-openapi, .dynamic-media-image')) return;
+    const href = a.getAttribute('href');
+    if (a.textContent.trim() !== href) return;
+    const isFirstSection = !!firstSection?.contains(a);
+    const pic = createDMPicture(href, a.getAttribute('title') || '', first && isFirstSection);
+    if (!pic) return;
+    first = false;
+    a.replaceWith(pic);
+  });
+}
+
 /**
  * Decorates the main element.
  * @param {Element} main The main element
  */
 // eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main) {
+  // DM image-links must become pictures before buttons/blocks decoration
+  decorateDMImageLinks(main);
   // hopefully forward compatible button decoration
   decorateButtons(main);
   decorateIcons(main);

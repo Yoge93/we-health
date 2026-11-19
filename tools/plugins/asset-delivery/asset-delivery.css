@@ -1,0 +1,92 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: adobe-clean, 'Source Sans Pro', -apple-system, system-ui, 'Segoe UI', roboto, sans-serif;
+  font-size: 14px;
+  color: #222;
+  background: #fff;
+}
+
+.asset-delivery {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.asset-delivery-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+.asset-delivery-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.asset-delivery-label {
+  font-weight: 700;
+}
+
+.asset-delivery-field select {
+  min-width: 260px;
+  padding: 6px 8px;
+  font: inherit;
+  border: 1px solid #909090;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.asset-delivery-field select:focus-visible {
+  outline: 2px solid #3b63fb;
+  outline-offset: 1px;
+}
+
+.asset-delivery-hint {
+  flex: 1 1 280px;
+  margin: 0;
+  color: #505050;
+}
+
+.asset-delivery-message {
+  margin: 12px 16px 0;
+  padding: 10px 12px;
+  border-radius: 4px;
+  border-left: 4px solid #d31510;
+  background: #fff0ef;
+}
+
+.asset-delivery-message.info {
+  border-left-color: #3b63fb;
+  background: #eef2ff;
+}
+
+.asset-delivery-message button {
+  margin-left: 8px;
+  padding: 2px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.asset-delivery-selector {
+  position: relative;
+  flex: 1;
+  min-height: 480px;
+}
+
+.asset-delivery-loading {
+  margin: 24px 16px;
+  color: #505050;
+}
