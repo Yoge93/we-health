@@ -114,6 +114,8 @@ export default function decorate(block) {
     : [{ width: '750' }];
 
   slider.querySelectorAll('picture > img').forEach((img) => {
+    // external images (e.g. Dynamic Media) are already responsive; only optimise media bus images
+    if (new URL(img.src, window.location.href).origin !== window.location.origin) return;
     const optimizedPic = createOptimizedPicture(img.src, img.alt, false, carouselPictureBreakpoints);
     moveInstrumentation(img, optimizedPic.querySelector('img'));
     img.closest('picture').replaceWith(optimizedPic);
