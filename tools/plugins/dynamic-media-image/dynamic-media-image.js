@@ -393,12 +393,10 @@ async function init() {
     const mount = document.createElement('div');
     mount.className = 'dmi-picker-mount';
     pickerHost.append(mount);
-    const repositoryId = repoSelect.value;
-    const tier = repositoryId.startsWith('delivery-') ? 'delivery' : 'author';
     window.PureJSSelectors.renderAssetSelector(mount, {
       imsToken: token,
-      repositoryId,
-      aemTierType: config.aemTierType.includes(tier) ? tier : config.aemTierType[0],
+      repositoryId: repoSelect.value,
+      aemTierType: config.aemTierType,
       filterSchema: config.filterSchema,
       featureSet: ['upload', 'collections', 'detail-panel', 'dynamic-media'],
       onClose: closePicker,
