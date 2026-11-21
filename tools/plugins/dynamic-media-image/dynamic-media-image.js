@@ -405,6 +405,22 @@ async function init() {
   };
   repoSelect.addEventListener('change', renderSelector);
 
+  // The selector's first render in a page session fails with "Network Error" and later
+  // renders work, so warm it up off-screen while the author is still on the form.
+  const warmUp = loadScript(ASSET_SELECTOR_URL).then(() => new Promise((resolve) => {
+    const ghost = document.createElement('div');
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:600px;visibility:hidden';
+    document.body.append(ghost);
+    window.PureJSSelectors.renderAssetSelector(ghost, {
+      imsToken: token,
+      repositoryId: config.repoNames[0],
+      aemTierType: config.aemTierType,
+      handleSelection: () => {},
+    });
+    setTimeout(() => { ghost.remove(); resolve(); }, 4000);
+  })).catch(() => {});
+
   $(`${fieldId('image')}-select`).addEventListener('click', async () => {
     try {
       await loadScript(ASSET_SELECTOR_URL);
@@ -412,6 +428,9 @@ async function init() {
       setStatus(MESSAGES.selectorFailed, 'error');
       return;
     }
+    setStatus('Loading assets…');
+    await warmUp;
+    setStatus('');
     $('dmi-picker').hidden = false;
     renderSelector();
   });
