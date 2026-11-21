@@ -196,6 +196,21 @@ body {
   font-weight: 700;
 }
 
+.dmi-repo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dmi-repo-select {
+  min-width: 320px;
+  padding: 6px 8px;
+  font: inherit;
+  border: 1px solid #909090;
+  border-radius: 4px;
+  background: #fff;
+}
+
 .dmi-picker-host,
 .dmi-picker-mount {
   flex: 1;

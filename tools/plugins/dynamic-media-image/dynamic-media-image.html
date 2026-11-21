@@ -18,8 +18,11 @@
   </main>
   <div class="dmi-picker" id="dmi-picker" hidden>
     <div class="dmi-picker-bar">
-      <span>Select an asset</span>
-      <button type="button" id="dmi-picker-close">Cancel</button>
+      <label class="dmi-repo" for="dmi-repo">
+        <span>Repository</span>
+        <select class="dmi-repo-select" id="dmi-repo"></select>
+      </label>
+      <button type="button" class="dmi-btn" id="dmi-picker-close">Cancel</button>
     </div>
     <div class="dmi-picker-host" id="dmi-picker-host"></div>
   </div>

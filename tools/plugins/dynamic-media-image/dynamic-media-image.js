@@ -21,7 +21,6 @@ const MODEL_ID = 'dynamic-media-image';
 const ASSET_SELECTOR_URL = 'https://experience.adobe.com/solutions/CQ-assets-selectors/static-assets/resources/assets-selectors.js';
 const CONFIG_URL = new URL('./dynamic-media-image.config.json', import.meta.url).href;
 const NON_BLOCKS = new Set(['metadata', 'section-metadata', 'library-metadata']);
-const REPO_REL = 'http://ns.adobe.com/adobecloud/rel/repository';
 const DEBOUNCE_MS = 500;
 
 export const MESSAGES = {
@@ -155,14 +154,6 @@ export function buildBlockHtml(values, model) {
 }
 
 /* ---------- asset selection (same outcome as the UE custom asset picker) ---------- */
-
-export function getRepositoryId(repo) {
-  return repo?.['repo:repositoryId']
-    // eslint-disable-next-line no-underscore-dangle
-    || repo?._embedded?.[REPO_REL]?.['repo:repositoryId']
-    || repo?.repositoryId
-    || '';
-}
 
 function getSeoName(name = '') {
   return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name;
@@ -380,6 +371,42 @@ async function init() {
     showImage();
     scheduleWrite(0);
   });
+  // Repository dropdown = repoNames of the UE picker config (delivery first, then author)
+  const repoSelect = $('dmi-repo');
+  repoSelect.innerHTML = config.repoNames
+    .map((repo) => `<option value="${escapeHtml(repo)}">${escapeHtml(repo)}</option>`).join('');
+
+  const handleSelection = (assets) => {
+    const [asset] = assets || [];
+    if (!asset) return;
+    const picked = resolveAssetValue({ 'repo:repositoryId': repoSelect.value, ...asset }, config);
+    values.image = picked.url;
+    if (!values.imageTitle && picked.alt) values.imageTitle = picked.alt;
+    closePicker();
+    fillForm();
+    if (picked.tier === 'author' && !picked.published) setStatus(MESSAGES.notPublished, 'warn');
+    scheduleWrite(0);
+  };
+
+  const renderSelector = () => {
+    pickerHost.textContent = '';
+    const mount = document.createElement('div');
+    mount.className = 'dmi-picker-mount';
+    pickerHost.append(mount);
+    const repositoryId = repoSelect.value;
+    const tier = repositoryId.startsWith('delivery-') ? 'delivery' : 'author';
+    window.PureJSSelectors.renderAssetSelector(mount, {
+      imsToken: token,
+      repositoryId,
+      aemTierType: config.aemTierType.includes(tier) ? tier : config.aemTierType[0],
+      filterSchema: config.filterSchema,
+      featureSet: ['upload', 'collections', 'detail-panel', 'dynamic-media'],
+      onClose: closePicker,
+      handleSelection,
+    });
+  };
+  repoSelect.addEventListener('change', renderSelector);
+
   $(`${fieldId('image')}-select`).addEventListener('click', async () => {
     try {
       await loadScript(ASSET_SELECTOR_URL);
@@ -388,35 +415,7 @@ async function init() {
       return;
     }
     $('dmi-picker').hidden = false;
-    pickerHost.textContent = '';
-    const mount = document.createElement('div');
-    mount.className = 'dmi-picker-mount';
-    pickerHost.append(mount);
-    const allowed = new Set(config.repoNames);
-    window.PureJSSelectors.renderAssetSelector(mount, {
-      imsToken: token,
-      aemTierType: config.aemTierType,
-      // no fixed repositoryId: the selector then shows its repository dropdown (rail)
-      rail: true,
-      filterRepoList: (repos) => {
-        const filtered = (repos || []).filter((repo) => allowed.has(getRepositoryId(repo)));
-        return filtered.length ? filtered : repos;
-      },
-      filterSchema: config.filterSchema,
-      featureSet: ['upload', 'collections', 'detail-panel', 'dynamic-media'],
-      onClose: closePicker,
-      handleSelection: (assets) => {
-        const [asset] = assets || [];
-        if (!asset) return;
-        const picked = resolveAssetValue(asset, config);
-        values.image = picked.url;
-        if (!values.imageTitle && picked.alt) values.imageTitle = picked.alt;
-        closePicker();
-        fillForm();
-        if (picked.tier === 'author' && !picked.published) setStatus(MESSAGES.notPublished, 'warn');
-        scheduleWrite(0);
-      },
-    });
+    renderSelector();
   });
 
   /* follow the cursor: the panel is only active inside a dynamic-media-image block */
