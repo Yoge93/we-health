@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dynamic Media(Image)</title>
+  <link rel="stylesheet" href="./dynamic-media-image.css">
+  <script src="./dynamic-media-image.js" type="module"></script>
+</head>
+<body>
+  <main class="dmi">
+    <header class="dmi-header">
+      <h1 class="dmi-title" id="dmi-title">Dynamic Media(Image)</h1>
+      <p class="dmi-status" id="dmi-status" role="status" aria-live="polite"></p>
+    </header>
+    <section class="dmi-notice" id="dmi-notice" hidden></section>
+    <form class="dmi-form" id="dmi-form" hidden></form>
+  </main>
+  <div class="dmi-picker" id="dmi-picker" hidden>
+    <div class="dmi-picker-bar">
+      <span>Select an asset</span>
+      <button type="button" id="dmi-picker-close">Cancel</button>
+    </div>
+    <div class="dmi-picker-host" id="dmi-picker-host"></div>
+  </div>
+</body>
+</html>
