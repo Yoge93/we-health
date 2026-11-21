@@ -301,6 +301,7 @@ async function init() {
       el.hidden = !evaluateCondition(JSON.parse(el.dataset.condition), values);
     });
   };
+  syncConditions();
 
   const showImage = () => {
     const id = fieldId('image');
