@@ -155,6 +155,10 @@ export function buildBlockHtml(values, model) {
 
 /* ---------- asset selection (same outcome as the UE custom asset picker) ---------- */
 
+export function tierOf(repositoryId = '') {
+  return repositoryId.startsWith('delivery-') ? 'delivery' : 'author';
+}
+
 function getSeoName(name = '') {
   return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name;
 }
@@ -396,7 +400,9 @@ async function init() {
     window.PureJSSelectors.renderAssetSelector(mount, {
       imsToken: token,
       repositoryId: repoSelect.value,
-      aemTierType: config.aemTierType,
+      // One tier per repository: with both tiers the selector can reuse the last-used
+      // (author) view against the delivery host and fail with 404.
+      aemTierType: [tierOf(repoSelect.value)],
       filterSchema: config.filterSchema,
       featureSet: ['upload', 'collections', 'detail-panel', 'dynamic-media'],
       onClose: closePicker,
@@ -415,7 +421,7 @@ async function init() {
     window.PureJSSelectors.renderAssetSelector(ghost, {
       imsToken: token,
       repositoryId: config.repoNames[0],
-      aemTierType: config.aemTierType,
+      aemTierType: [tierOf(config.repoNames[0])],
       handleSelection: () => {},
     });
     setTimeout(() => { ghost.remove(); resolve(); }, 4000);
