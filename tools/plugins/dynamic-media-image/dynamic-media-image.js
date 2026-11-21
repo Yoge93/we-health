@@ -396,7 +396,8 @@ async function init() {
     window.PureJSSelectors.renderAssetSelector(mount, {
       imsToken: token,
       aemTierType: config.aemTierType,
-      repositoryId: config.repoNames[0],
+      // no fixed repositoryId: the selector then shows its repository dropdown (rail)
+      rail: true,
       filterRepoList: (repos) => {
         const filtered = (repos || []).filter((repo) => allowed.has(getRepositoryId(repo)));
         return filtered.length ? filtered : repos;
