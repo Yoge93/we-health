@@ -25,10 +25,10 @@ DA counterpart of the Universal Editor block `dynamic-media-image`.
 
 ## Asset picker
 
-The Image field opens the AEM Assets selector with a **Repository** dropdown listing the  from the config:
+The Image field opens the AEM Assets selector with a **Repository** dropdown listing the `repoNames` from the config:
 
-- **delivery-p35437…**: approved Dynamic Media assets. The selector browses the author repository with a locked *Asset Status: Approved* filter (DA's own "Author + Dynamic Media delivery" mode, because delivery-tier browsing from DA was unreliable), checks the asset is approved with activation target *Delivery*, and stores .
-- **author-p35437…**: all assets. Stores the publish URL  (needs the asset published; the DM block only renders delivery URLs, as in UE).
+- **delivery-p35437…**: approved Dynamic Media assets. The selector browses the author repository with a locked *Asset Status: Approved* filter (DA's own "Author + Dynamic Media delivery" mode, because delivery-tier browsing from DA was unreliable), checks the asset is approved with activation target *Delivery*, and stores `https://delivery-p35437…/adobe/assets/<urn:aaid:aem:…>/as/<name>.<ext>`.
+- **author-p35437…**: all assets. Stores the publish URL `https://publish-p35437…/content/dam/…` (needs the asset published; the DM block only renders delivery URLs, as in UE).
 
 ## Scope
 
@@ -41,4 +41,6 @@ The panel only edits when the cursor is inside a `dynamic-media-image` block. An
 | title | path | experience |
 |---|---|---|
 | Blocks | `/docs/library/blocks.json` | |
-| Dynamic Media(Image) | `/tools/plugins/dynamic-media-image/dynamic-media-image.html` | `inline` |
+| Dynamic Media(Image) | `/tools/plugins/dynamic-media-image/dynamic-media-image.html` | `fullsize-dialog` |
+
+In New Authoring it opens from **Panels → Extensions → Dynamic Media(Image)**.
