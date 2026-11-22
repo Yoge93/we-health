@@ -1,5 +1,5 @@
 /*
- * DA properties panel for the Dynamic Media(Image) block.
+ * DA properties panel for the Dynamic Media Image block.
  *
  * DA counterpart of the Universal Editor block "dynamic-media-image":
  * - The fields, labels, options, descriptions and the Border Settings condition come from
@@ -37,8 +37,8 @@ const APPROVED_FILTER = [{
 }];
 
 export const MESSAGES = {
-  notInBlock: 'Place the cursor inside a Dynamic Media(Image) block to edit its properties. Add one from Library → Blocks.',
-  unsupported: 'Editing Dynamic Media(Image) properties needs New Authoring. Turn on "New Authoring" (top right) and open this panel from Panels → Extensions.',
+  notInBlock: 'Place the cursor inside a Dynamic Media Image block to edit its properties. Add one from Library → Blocks.',
+  unsupported: 'Editing Dynamic Media Image properties needs New Authoring. Turn on "New Authoring" (top right) and open this panel from Panels → Extensions.',
   readOnly: 'This page is read-only.',
   notPublished: 'This author asset is not published. The block stores its publish URL, which works once the asset is published.',
   notApproved: 'This asset is not approved for Dynamic Media delivery. Approve it in AEM Assets (status "Approved", activation target "Delivery").',
@@ -283,7 +283,10 @@ function renderField(field) {
       <input type="checkbox" role="switch" id="${id}" name="${field.name}"${describedBy}>
       <span>${escapeHtml(field.label)}</span></label>${description}`;
   } else if (field.component === 'select') {
-    const options = field.options.map((o) => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.name)}</option>`).join('');
+    // UE shows "Select..." when the model default is not one of the options (preset: "na")
+    const unset = field.value !== undefined && !field.options.some((o) => o.value === field.value);
+    const placeholder = unset ? '<option value="" hidden>Select...</option>' : '';
+    const options = placeholder + field.options.map((o) => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.name)}</option>`).join('');
     wrap.innerHTML = `<label class="dmi-label" for="${id}">${escapeHtml(field.label)}</label>
       <select id="${id}" name="${field.name}"${describedBy}>${options}</select>${description}`;
   } else if (field.component === 'container') {
@@ -307,7 +310,7 @@ async function init() {
     fetch(CONFIG_URL).then((r) => r.json()),
   ]);
   if (!model) {
-    showNotice('The Dynamic Media(Image) model was not found in /component-models.json.');
+    showNotice('The Dynamic Media Image model was not found in /component-models.json.');
     return;
   }
 

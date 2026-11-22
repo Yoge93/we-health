@@ -1,4 +1,4 @@
-# Dynamic Media(Image) – DA properties panel
+# Dynamic Media Image – DA properties panel
 
 DA counterpart of the Universal Editor block `dynamic-media-image`.
 
@@ -41,6 +41,6 @@ The panel only edits when the cursor is inside a `dynamic-media-image` block. An
 | title | path | experience |
 |---|---|---|
 | Blocks | `/docs/library/blocks.json` | |
-| Dynamic Media(Image) | `/tools/plugins/dynamic-media-image/dynamic-media-image.html` | `fullsize-dialog` |
+| Dynamic Media Image | `/tools/plugins/dynamic-media-image/dynamic-media-image.html` | `fullsize-dialog` |
 
-In New Authoring it opens from **Panels → Extensions → Dynamic Media(Image)**.
+In New Authoring it opens from **Panels → Extensions → Dynamic Media Image**.
