@@ -22,12 +22,26 @@ const ASSET_SELECTOR_URL = 'https://experience.adobe.com/solutions/CQ-assets-sel
 const CONFIG_URL = new URL('./dynamic-media-image.config.json', import.meta.url).href;
 const NON_BLOCKS = new Set(['metadata', 'section-metadata', 'library-metadata']);
 const DEBOUNCE_MS = 500;
+/** Locked "Asset Status: Approved" filter (same as DA's approved-only Dynamic Media mode). */
+const APPROVED_FILTER = [{
+  fields: [{
+    element: 'radiogroup',
+    name: 'property=dam:assetStatus=',
+    defaultValue: ['approved'],
+    readOnly: true,
+    orientation: 'vertical',
+    options: [{ label: 'Approved', value: 'approved', readOnly: true }],
+  }],
+  header: 'Asset Status',
+  groupKey: 'AssetStatusGroup',
+}];
 
 export const MESSAGES = {
   notInBlock: 'Place the cursor inside a Dynamic Media(Image) block to edit its properties. Add one from Library → Blocks.',
   unsupported: 'Editing Dynamic Media(Image) properties needs New Authoring. Turn on "New Authoring" (top right) and open this panel from Panels → Extensions.',
   readOnly: 'This page is read-only.',
   notPublished: 'This author asset is not published. The block stores its publish URL, which works once the asset is published.',
+  notApproved: 'This asset is not approved for Dynamic Media delivery. Approve it in AEM Assets (status "Approved", activation target "Delivery").',
   selectorFailed: 'The AEM Assets selector could not be loaded.',
 };
 
@@ -163,19 +177,39 @@ function getSeoName(name = '') {
   return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name;
 }
 
-export function resolveAssetValue(asset, config) {
-  const mimetype = (asset.mimetype || asset['dc:format'] || '').toLowerCase();
-  const repositoryId = asset['repo:repositoryId'] || '';
-  const isDelivery = repositoryId.startsWith('delivery-') || (!!asset['repo:assetId'] && !asset.path);
-  const name = asset['repo:name'] || asset.name || '';
+function assetMetadata(asset) {
   // eslint-disable-next-line no-underscore-dangle
-  const meta = asset._embedded?.['http://ns.adobe.com/adobecloud/rel/metadata/asset'] || {};
+  return asset?._embedded?.['http://ns.adobe.com/adobecloud/rel/metadata/asset'] || {};
+}
+
+/** Approved for Dynamic Media delivery (same rule DA's built-in AEM Assets uses). */
+export function isApprovedForDelivery(asset) {
+  if (asset['repo:assetId'] && !asset.path) return true; // delivery-tier results are approved
+  const meta = assetMetadata(asset);
+  const status = meta['dam:assetStatus'] || asset['dam:assetStatus'];
+  const target = meta['dam:activationTarget'] || asset['dam:activationTarget'];
+  return status === 'approved' && (!target || target === 'delivery');
+}
+
+/**
+ * @param {object} asset selected asset
+ * @param {object} config picker config (repoNames, …)
+ * @param {string} repository the repoName chosen in the Repository dropdown
+ */
+export function resolveAssetValue(asset, config, repository = '') {
+  const mimetype = (asset.mimetype || asset['dc:format'] || '').toLowerCase();
+  const isDelivery = tierOf(repository) === 'delivery'
+    || (!repository && !!asset['repo:assetId'] && !asset.path);
+  const name = asset['repo:name'] || asset.name || '';
+  const meta = assetMetadata(asset);
   const titleValue = asset['dc:title'];
   const alt = meta['dc:description'] || meta['dc:title']
     || (typeof titleValue === 'object' ? titleValue?.['o:default'] : titleValue) || '';
 
   if (isDelivery) {
-    const host = repositoryId || config.repoNames.find((r) => r.startsWith('delivery-'));
+    if (!isApprovedForDelivery(asset)) return { error: MESSAGES.notApproved };
+    const host = (tierOf(repository) === 'delivery' && repository)
+      || config.repoNames.find((r) => r.startsWith('delivery-'));
     const id = asset['repo:assetId'] || asset['repo:id'];
     const base = `https://${host}/adobe/assets/${id}`;
     const url = mimetype.startsWith('image/')
@@ -183,7 +217,8 @@ export function resolveAssetValue(asset, config) {
       : `${base}/original/as/${encodeURIComponent(name)}`;
     return { url, alt, tier: 'delivery' };
   }
-  const authorHost = repositoryId || config.repoNames.find((r) => r.startsWith('author-'));
+  const authorHost = (tierOf(repository) === 'author' && repository)
+    || config.repoNames.find((r) => r.startsWith('author-'));
   const publishHost = config.publishHost || authorHost.replace(/^author-/, 'publish-');
   const path = (asset.path || '').split('/').map(encodeURIComponent).join('/');
   const published = (asset.isPublishedToAemPublish ?? asset['aem:published']) === true;
@@ -383,7 +418,12 @@ async function init() {
   const handleSelection = (assets) => {
     const [asset] = assets || [];
     if (!asset) return;
-    const picked = resolveAssetValue({ 'repo:repositoryId': repoSelect.value, ...asset }, config);
+    const picked = resolveAssetValue(asset, config, repoSelect.value);
+    if (picked.error) {
+      setStatus(picked.error, 'error');
+      closePicker();
+      return;
+    }
     values.image = picked.url;
     if (!values.imageTitle && picked.alt) values.imageTitle = picked.alt;
     closePicker();
@@ -397,35 +437,24 @@ async function init() {
     const mount = document.createElement('div');
     mount.className = 'dmi-picker-mount';
     pickerHost.append(mount);
+    const dm = tierOf(repoSelect.value) === 'delivery';
+    // Delivery-tier browsing from DA is unreliable (Network Error / 404), so the delivery
+    // option browses the author repository locked to approved assets and stores the
+    // Dynamic Media delivery URL – the same "Author + DM delivery" mode DA itself uses.
     window.PureJSSelectors.renderAssetSelector(mount, {
       imsToken: token,
-      repositoryId: repoSelect.value,
-      // One tier per repository: with both tiers the selector can reuse the last-used
-      // (author) view against the delivery host and fail with 404.
-      aemTierType: [tierOf(repoSelect.value)],
-      filterSchema: config.filterSchema,
-      featureSet: ['upload', 'collections', 'detail-panel', 'dynamic-media'],
+      repositoryId: config.repoNames.find((r) => tierOf(r) === 'author'),
+      aemTierType: ['author'],
+      filterSchema: dm ? [...APPROVED_FILTER, ...config.filterSchema] : config.filterSchema,
+      ...(dm && { filterSchemaSource: 'hybrid-merge-deep' }),
+      featureSet: dm
+        ? ['collections', 'detail-panel', 'dynamic-media']
+        : ['upload', 'collections', 'detail-panel'],
       onClose: closePicker,
       handleSelection,
     });
   };
   repoSelect.addEventListener('change', renderSelector);
-
-  // The selector's first render in a page session fails with "Network Error" and later
-  // renders work, so warm it up off-screen while the author is still on the form.
-  const warmUp = loadScript(ASSET_SELECTOR_URL).then(() => new Promise((resolve) => {
-    const ghost = document.createElement('div');
-    ghost.setAttribute('aria-hidden', 'true');
-    ghost.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:600px;visibility:hidden';
-    document.body.append(ghost);
-    window.PureJSSelectors.renderAssetSelector(ghost, {
-      imsToken: token,
-      repositoryId: config.repoNames[0],
-      aemTierType: [tierOf(config.repoNames[0])],
-      handleSelection: () => {},
-    });
-    setTimeout(() => { ghost.remove(); resolve(); }, 4000);
-  })).catch(() => {});
 
   $(`${fieldId('image')}-select`).addEventListener('click', async () => {
     try {
@@ -434,8 +463,6 @@ async function init() {
       setStatus(MESSAGES.selectorFailed, 'error');
       return;
     }
-    setStatus('Loading assets…');
-    await warmUp;
     setStatus('');
     $('dmi-picker').hidden = false;
     renderSelector();
