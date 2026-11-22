@@ -441,17 +441,19 @@ async function init() {
     // Delivery-tier browsing from DA is unreliable (Network Error / 404), so the delivery
     // option browses the author repository locked to approved assets and stores the
     // Dynamic Media delivery URL – the same "Author + DM delivery" mode DA itself uses.
+    // Props match the earlier asset-delivery plugin, which worked in every browser; the UE
+    // config's extra filters (tags, expiry, size) are left out because they call further
+    // AEM APIs that can answer 403 and blank the whole selector.
     window.PureJSSelectors.renderAssetSelector(mount, {
       imsToken: token,
       repositoryId: config.repoNames.find((r) => tierOf(r) === 'author'),
-      aemTierType: ['author'],
-      filterSchema: dm ? [...APPROVED_FILTER, ...config.filterSchema] : config.filterSchema,
-      ...(dm && { filterSchemaSource: 'hybrid-merge-deep' }),
+      aemTierType: 'author',
       featureSet: dm
-        ? ['collections', 'detail-panel', 'dynamic-media']
+        ? ['upload', 'collections', 'detail-panel', 'dynamic-media']
         : ['upload', 'collections', 'detail-panel'],
       onClose: closePicker,
       handleSelection,
+      ...(dm && { filterSchema: APPROVED_FILTER, filterSchemaSource: 'hybrid-merge-deep' }),
     });
   };
   repoSelect.addEventListener('change', renderSelector);
