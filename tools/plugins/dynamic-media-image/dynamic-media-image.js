@@ -449,6 +449,9 @@ async function init() {
     // AEM APIs that can answer 403 and blank the whole selector.
     window.PureJSSelectors.renderAssetSelector(mount, {
       imsToken: token,
+      // Authors belong to several Adobe orgs; without imsOrg the selector guesses one and
+      // answers 403 "not entitled / no accessible folders" when it picks the wrong org.
+      ...(config.imsOrg && { imsOrg: config.imsOrg }),
       repositoryId: config.repoNames.find((r) => tierOf(r) === 'author'),
       aemTierType: 'author',
       featureSet: dm
